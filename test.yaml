@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  # namespace: frontend
+  labels:
+    app: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: public.ecr.aws/i7c6m7a3/frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "100m"
+            limits:
+              memory: "500Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-nodeport-service
+  # namespace: frontend
+  labels:
+    app: frontend
+  annotations:
+#Important Note:  Need to add health check path annotations in service level if we are planning to use multiple targets in a load balancer
+    alb.ingress.kubernetes.io/healthcheck-path: /index.html
+spec:
+  type: NodePort
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 31111
